@@ -113,8 +113,8 @@ loadModule()
 
 exportVar()
 {
-    local installPath=$1
-    export EASYBUILD_PREFIX=$installPath
+    local instPath=$1
+    export EASYBUILD_PREFIX=$instPath
     export EASYBUILD_BUILDPATH=/tmp/$USER/easybuild
 }
 
@@ -207,7 +207,7 @@ echo ""
 echo "# EXECUTE THE FOLLOWING COMMANDS IN YOUR TERMINAL #"
 echo "# BEFORE INSTALLING COSMO                         #"
 echo ""
-echo "export EASYBUILD_PREFIX=${installPath}"
+echo "export EASYBUILD_PREFIX=${INSTPATH}"
 echo "export EASYBUILD_BUILDPATH=/tmp/${USER}/easybuild"
 echo "module load daint-gpu"
 echo "module load EasyBuild-custom"
