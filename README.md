@@ -1,4 +1,4 @@
-# How to build COSMO in a post Daint update world
+# Building Cosmo with EB and the build script
 
 This is temporary tutorial to allow people to build their own version of crCLIM COSMO-pompa.
 The steps are only describing on how to compile the model on **DAINT** with the **CRAY** compiler.
