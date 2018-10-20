@@ -305,7 +305,6 @@ This is not recommended since it may affect the installation procedure(s) perfor
 but these ones can be ingnored.
 
 2. You may enter in a "module hell" before executing the driving script:
-Like:
 ```
 EasyBuild-custom/cscs(81):ERROR:102: Tcl command execution failed: if { [ string match *daint* $system ] || [ string match *dom* $system ] } {
     setenv EASYBUILD_OPTARCH                    $::env(CRAY_CPU_TARGET)
@@ -337,6 +336,7 @@ module load DYCORE_CRCLIM_GPU/crclim-CrayGNU-18.08-double
 and try to execute the Cosmo build script.
 
 ## Advanced usage of the script
+
 The `-z` flag is used to clean up the repository.
 As you may need to refresh it (or reclone it) the cleanup flag ensure the repository is DELETED before cloning it.
 Otherwise you end up with an error of the kind:
