@@ -144,7 +144,7 @@ Arguments:
 
 The script fetch (clone) the `crclim` branch of the `stella` and the `cosmo-pompa` repositories from the `C2SM-RCM` organisation.
 This is the default behavior and it's hardcoed in the script. 
-To change it, you need to modify the script (see "Advanced usage of the script").
+It's important that the script is cloning Stella and the Dycore in the current working directory and also that it's expecting to find the Stella and Dycore directories in the current working directory.  
 
 Once the sources are fetched, it creates an archive of the sources (a `tar.gz` file).
 One for Stella: `stella.tar.gz` and one for the Dycore: `dycore.tar.gz`.
@@ -286,9 +286,10 @@ test/jenkins/./build.sh -c cray -t gpu -x $EBROOTDYCORE_CRCLIM_GPU
 ```
 and you're done! After a waiting time close to ~1h to 1h30' you have a working Cosmo executable.
 
-## Troubleshooting
+# Troubleshooting
 
-1. You may encouter similar messages during the compilation with EB:
+## EB modules warning
+You may encouter similar messages during the compilation with EB:
 ```
 WARNING: Found one or more non-allowed loaded (EasyBuild-generated) modules in current environment:
 * cURL/.7.47.0
@@ -304,7 +305,8 @@ This is not recommended since it may affect the installation procedure(s) perfor
 ```
 but these ones can be ingnored.
 
-2. You may enter in a "module hell" before executing the driving script:
+## Module hell
+You may enter in a "module hell" before executing the driving script:
 ```
 EasyBuild-custom/cscs(81):ERROR:102: Tcl command execution failed: if { [ string match *daint* $system ] || [ string match *dom* $system ] } {
     setenv EASYBUILD_OPTARCH                    $::env(CRAY_CPU_TARGET)
@@ -335,12 +337,14 @@ module load DYCORE_CRCLIM_GPU/crclim-CrayGNU-18.08-double
 ```
 and try to execute the Cosmo build script.
 
-## Advanced usage of the script
-
-The `-z` flag is used to clean up the repository.
-As you may need to refresh it (or reclone it) the cleanup flag ensure the repository is DELETED before cloning it.
-Otherwise you end up with an error of the kind:
+## Fatal cloning
+As driving script is expecting to find the Stella and Dycore directories in the current working directory, you may be unable to clone it again (if needed).
+You'll get:
 ```
 fatal: destination path 'cosmo-pompa' already exists and is not an empty directory.
 ```
 and nothing is cloned.
+
+So that why the `-z` flag is there and ensure the repositories are **deleted** before cloning them again.
+The deletion occures **without warning and delay**.
+Be careful otherwise you may loose your work.
