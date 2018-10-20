@@ -68,8 +68,10 @@ and the `option.lib` files for both architectures:
 cp /scratch/username/eb-cosmo/env/Options.lib.cpu .
 cp /scratch/username/eb-cosmo/env/Options.lib.gpu .
 ```
-As we previously installed the Cordex DyCore for CPU, we load the corresponding module:  
+As we previously installed the Cordex DyCore for CPU, we load the all corresponding modules:  
 ```
+module load grib_api/1.13.1-CrayCCE-18.08 
+module load libgrib1_crclim/a1e4271-CrayCCE-18.08
 module load DYCORE_CRCLIM_CPU/cordex-CrayGNU-18.08-double
 ```
 and we run the Cosmo build script:
