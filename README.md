@@ -8,7 +8,7 @@ But it's recommended that you read the full documentation.
 As compiling the model is very slow on Daint, you may trigger the compilation with the TL;DR section and read the full documentation while it's compiling. 
 If the TL;DR doesn't work, read the full documentation.
 
-## TL;DR
+# TL;DR
 
 For this TL;DR we assume that we're working from the hypotetic "scratch" directory of the user `username`:
 ```
@@ -16,6 +16,8 @@ For this TL;DR we assume that we're working from the hypotetic "scratch" directo
 ``` 
 but the following instructions apply for any wokring directory.
 We also assume that everything is executed in the **same** terminal.
+
+## Build Stella and the Dycore
 
 Clone this repository:
 ```
@@ -47,6 +49,8 @@ module load EasyBuild-custom
 ```
 and execute them in your current environment (i.e. terminal).
 
+## Build Cosmo-pompa
+
 Change to the directory containing the Cosmo source you want to compile.
 For example, we assume that the Cosmo we want to compile is here:
 ```
@@ -74,6 +78,14 @@ and we run the Cosmo build script:
 test/jenkins/./build.sh -z -c cray -t gpu -x $EBVERSIONDYCORE_CRCLIM_GPU
 ```
 et voilà! After a waiting time close to ~1h to 1h30' you have a working Cosmo executable.
+
+# Extended version of the tutorial
+
+This extended version assume that you've tried the TL;DR once.
+This extended version provide details to better understand the structure of this new way of building the libraries needed for the Cosmo model.
+
+It's important to notice that this current approach is diverging from the one used by MeteoSwiss and thus cannot be yet applied ok Kesch.
+This also mean that currently we cannot (and we won't) merge it into the `crclim` branch of Cosmo-pompa.
 
 ## Building Stella and the Dycore
 
