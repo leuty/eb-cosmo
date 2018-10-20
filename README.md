@@ -75,8 +75,8 @@ At end of the compilation, the script is writing what you should export and load
 EXECUTE THE FOLLOWING COMMANDS IN YOUR TERMINAL BEFORE
 INSTALLING COSMO
 ================================================================
-export EASYBUILD_PREFIX=/scratch/snx1600/charpill/post-update/install/
-export EASYBUILD_BUILDPATH=/tmp/charpill/easybuild
+export EASYBUILD_PREFIX=/path/to/install/
+export EASYBUILD_BUILDPATH=/tmp/username/easybuild
 module load daint-gpu
 module load EasyBuild-custom
 ================================================================
@@ -91,7 +91,62 @@ fatal: destination path 'cosmo-pompa' already exists and is not an empty directo
 ```
 and nothing is cloned.
 
+## Building COSMO
 
+Once the needed modules are loaded:
+```
+export EASYBUILD_PREFIX=/path/to/install/
+export EASYBUILD_BUILDPATH=/tmp/username/easybuild
+module load daint-gpu
+module load EasyBuild-custom
+```
+you can see that the installed libraries are available:
+```
+------------ /path/to/install//modules/all ```------------
+DYCORE_CRCLIM_GPU/crclim-CrayGNU-18.08-double 
+Serialbox/2.4.1-CrayGNU-18.08                 
+libgrib1_crclim/a1e4271-CrayCCE-18.08 
+STELLA_CRCLIM/crclim-CrayGNU-18.08-double     
+grib_api/1.13.1-CrayCCE-18.08
+```
+where here we have access to a DyCore with the crCLIM setup compiled for GPU (`DYCORE_CRCLIM_GPU`).
+To use it, load it:
+```
+module load DYCORE_CRCLIM_GPU/crclim-CrayGNU-18.08-double
+```
+which export a variable (among others) `EBROOTDYCORE_CRCLIM_GPU`:
+```
+$ echo $EBROOTDYCORE_CRCLIM_GPU
+/path/to/install/software/DYCORE_CRCLIM_GPU/crclim-CrayGNU-18.08-double
+```
+The variable name will change according the setup you decided to build.
+If you're unsure of the variable name, you can request details of the module with:
+```
+$ module show DYCORE_CRCLIM_GPU/crclim-CrayGNU-18.08-double
+-------------------------------------------------------------------
+/path/to/install//modules/all/DYCORE_CRCLIM_GPU/crclim-CrayGNU-18.08-double:
+
+module-whatis	 Description: COSMO Pompa Dynamical core for GPU (CRCLIM) 
+module-whatis	 Homepage: https://github.com/C2SM-RCM/cosmo-pompa/tree/master/dycore (-b crclim) 
+conflict	 DYCORE_CRCLIM_GPU 
+prepend-path	 LD_LIBRARY_PATH /path/to/install/software/DYCORE_CRCLIM_GPU/crclim-CrayGNU-18.08-double/lib 
+prepend-path	 LIBRARY_PATH /path/to/install/software/DYCORE_CRCLIM_GPU/crclim-CrayGNU-18.08-double/lib 
+prepend-path	 PATH /path/to/install/software/DYCORE_CRCLIM_GPU/crclim-CrayGNU-18.08-double/bin 
+setenv		 EBROOTDYCORE_CRCLIM_GPU /path/to/install/software/DYCORE_CRCLIM_GPU/crclim-CrayGNU-18.08-double 
+setenv		 EBVERSIONDYCORE_CRCLIM_GPU crclim 
+setenv		 EBDEVELDYCORE_CRCLIM_GPU /scratch/snx1600/charpill/post-update/install/software/DYCORE_CRCLIM_GPU/crclim-CrayGNU-18.08-double/easybuild/DYCORE_CRCLIM_GPU-crclim-CrayGNU-18.08-double-easybuild-devel 
+```
+where you see the available environement variables.
+In our case we're interested by the one pointing to the installed DyCore.
+
+Once this is done, we can almost build Cosmo the "classical" way, that is to say with build script.
+you can almost start to build Cosmo.
+
+
+Then execute the build script as usual:
+```
+test/jenkins/./build.sh -z -c cray -t gpu -x /path/to/dycore/install
+```
 
 ## Advanced usage of the script
 
