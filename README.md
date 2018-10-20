@@ -3,6 +3,78 @@
 This is temporary tutorial to allow people to build their own version of crCLIM COSMO-pompa.
 The steps are only describing on how to compile the model on **DAINT** with the **CRAY** compiler.
 
+We provide a TL;DR for the impatient.
+But it's recommended that you read the full documentation.
+As compiling the model is very slow on Daint, you may trigger the compilation with the TL;DR section and read the full documentation while it's compiling. 
+If the TL;DR doesn't work, read the full documentation.
+
+## TL;DR
+
+For this TL;DR we assume that we're working from the hypotetic "scratch" directory of the user `username`:
+```
+/scratch/username/
+``` 
+but the following instructions apply for any wokring directory.
+We also assume that everything is executed in the **same** terminal.
+
+Clone this repository:
+```
+git clone git@github.com:PallasKat/eb-cosmo.git
+cd eb-cosmo
+```
+and go in it's directory:
+```
+cd eb-cosmo
+```
+
+Use the new dirver script to build the libraries needed to build Cosmo:
+```
+$ ./build_crclim_libs.sh -h
+Usage: build_crclim_libs.sh -p project -t target -i path [-z]
+```
+where `-p` is the project (or setup): `crclim` or `cordex`, the `-t` is the target: `cpu` or `gpu`, and `-i` the module install path.
+For example installing Stella and the Dycore with the Cordex setup for CPU in `/scratch/username/install/`:
+```
+$ ./build_crclim_libs.sh -p cordex -t cpu -i /scratch/username/install/
+```
+and note that the install directory must exist **before** executing the script.
+At the end the script output variables to export and module to load:
+```
+export EASYBUILD_PREFIX=/scratch/username/install/
+export EASYBUILD_BUILDPATH=/tmp/username/easybuild
+module load daint-gpu
+module load EasyBuild-custom
+```
+and execute them in your current environment (i.e. terminal).
+
+Change to the directory containing the Cosmo source you want to compile.
+For example, we assume that the Cosmo we want to compile is here:
+```
+cd /scratch/username/cosmo-pompa/cosmo
+```
+and we start by executing the Cosmo builds script to trigger the environement fetching:
+```
+test/jenkins/build.sh -h
+```
+and replace the Daint environment by the one provided by this repository:
+```
+cp /scratch/username/eb-cosmo/env/env.daint.sh test/jenkins/env/
+```
+and the `option.lib` files for both architectures:
+```
+cp /scratch/username/eb-cosmo/env/Options.lib.cpu .
+cp /scratch/username/eb-cosmo/env/Options.lib.gpu .
+```
+As we previously installed the Cordex DyCore for CPU, we load the corresponding module:  
+```
+module load DYCORE_CRCLIM_CPU/cordex-CrayGNU-18.08-double
+```
+and we run the Cosmo build script:
+```
+test/jenkins/./build.sh -z -c cray -t gpu -x $EBVERSIONDYCORE_CRCLIM_GPU
+```
+et voilà! After a waiting time close to ~1h to 1h30' you have a working Cosmo executable.
+
 ## Building Stella and the Dycore
 
 Clone this repository.
@@ -140,53 +212,29 @@ where you see the available environement variables.
 In our case we're interested by the one pointing to the installed DyCore.
 
 Once this is done, we can almost build Cosmo the "classical" way, that is to say with build script.
-you can almost start to build Cosmo.
-
-
-Then execute the build script as usual:
+you can almost start to build Cosmo, you just need to replace the `env.daint.sh` as the one in the buildenv is not adapted anymore to build the model on Daint.
+Start by triggering environment fetching by calling:
 ```
-test/jenkins/./build.sh -z -c cray -t gpu -x /path/to/dycore/install
+cd cosmo-pompa/cosmo
+test/jenkins/./build.sh
+```
+then replace the Daint environment:
+```
+cp env.daint.sh test/jenkins/env/
+```
+and execute the build script as usual:
+```
+test/jenkins/./build.sh -z -c cray -t gpu -x $EBVERSIONDYCORE_CRCLIM_GPU
 ```
 
-## Advanced usage of the script
+## Troubleshooting
 
-
-## Steps before building COSMO
-
-As we're going to use EasyBuild (EB), you should export the following variable:
-```
-export EASYBUILD_PREFIX=/path/to/your/install/
-export EASYBUILD_BUILDPATH=/tmp/$USER/easybuild
-```
-then load the needed modules:
-```
-module load daint-gpu
-module load EasyBuild-custom
-```
-then, if needed, build the following libraries with EB:
+If you encouter any issue with any of the output libraries (grib, netcdf, serialbox, ...), start by building the libraries:
 ```
 eb grib_api-1.13.1-CrayCCE-18.08.eb -r
 eb libgrib1_crclim-a1e4271-CrayCCE-18.08.eb -r
 ```
-Note that the `-r` option resolves dependencies automatically (e.g. Boost, Cuda, ...).
-
-Now EB is pointing to the repository with the `EASYBUILD_PREFIX` variable and you can see the install modules with:
-```
-module avail
-```
-Please note that once the modules have been built they're always available.
-But after a fresh login you should forget to do:
-```
-module use /path/to/your/install/modules/all
-```
-which is the path that has been used when exporting `EASYBUILD_PREFIX` (i.e. `/path/to/your/install/`).
-
-## Preparing Cosmo build environment
-
-To compile COSMO with the previously built modules you need to change a bit the environment.
-As this tutorial is only explaining how to compile a GPU executable with Cray, you have to adapt `Options.lib.gpu`, ~`Options.daint.cray.gpu`~, and `env.daint.sh`.
-
-Modification in `Options.lib.gpu`:
+then apply the folowing modification to `Options.lib.gpu`:
 ```
 # Grib1 library
 GRIBDWDL = -L${EBROOTLIBGRIB1_CRCLIM} -lgrib1_cray
@@ -205,25 +253,17 @@ SERIALBOX  = ${EBROOTSERIALBOX}
 SERIALBOXL = -L${EBROOTSERIALBOX}/lib
 ```
 
-Modification in `Options.daint.cray.gpu`:
-```
-NOTHING SHOULD BE MODIFIED
-```
+WARNING: Found one or more non-allowed loaded (EasyBuild-generated) modules in current environment:
+* cURL/.7.47.0
+* expat/.2.1.0
+* zlib/.1.2.8
+* libxml2/.2.9.3
+* ncurses/.6.0
+* gettext/.0.19.7
+* Perl/5.22.1-bare
+* git/.2.13.1
 
-Several modifications in `env.daint.sh`.
+This is not recommended since it may affect the installation procedure(s) performed by EasyBuild.
 
+## Advanced usage of the script
 
-## Building COSMO
-
-Load the needed modules:
-```
-module use module use /path/to/your/install/modules/all
-module load daint-gpu
-module load grib_api/1.13.1-CrayCCE-18.08 libgrib1_crclim/a1e4271-CrayCCE-18.08
-module remove cudatoolkit craype-accel-nvidia60 cray-libsci_acc cray-netcdf
-```
-where `/path/to/your/install/` is the path that has been used when exporting EASYBUILD_PREFIX.
-Then execute the build script as usual:
-```
-test/jenkins/./build.sh -z -c cray -t gpu -x /path/to/dycore/install
-```
