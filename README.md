@@ -467,18 +467,18 @@ but these ones can be ignored.
 
 ## Impossible to use EB for Grib 
 
-Currently the installed libraries with CSCS EB config cannot be used with the model.
+Currently the installed libraries with CSCS EB config files cannot be used with the model.
 Indeed the `option.lib` files in the repository for both architectures:
   * eb-cosmo/env/Options.lib.cpu
   * eb-cosmo/env/Options.lib.gpu
 
-use the EB exported variables but this trigger the following error when running the model:
+as the EB exported variables but this trigger the following error when running the model:
 ```
 install/./cosmo_crclim_cpu: error while loading shared libraries: libgrib_api_f90.so.0: cannot open shared object file: No such file or directory
 ```
-There is **no fix** for that issue for now.
+There is **no fix for that issue for now**.
 
-## What has been tested?
+# What has been tested?
 
 You should be aware that only Few test have been executed to assess the correctness of the model.
 Only the basic test have been executed :
