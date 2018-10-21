@@ -389,5 +389,26 @@ install/./cosmo_crclim_cpu: error while loading shared libraries: libgrib_api_f9
 ```
 There is **no fix** for that issue for now.
 
+## What has been tested?
 
+You should be aware that only Few test have been executed to assess the correctness of the model.
+Only the basic test have been executed :
+  * test_1 CPU 2 Km
+  * test_1 CPU 12 Km
+  * test_1 CPU 50 Km
+  * test_1 GPU 2 Km
+  * test_1 GPU 12 Km
+  * test_1 GPU 50 Km
 
+and only for the crCLIM setup.
+The results are the following: 
+```
+[  OK  ] RESULT crCLIM_2km/test_1: crCLIM 2km
+[  OK  ] RESULT crCLIM_12km/test_1: crCLIM 12km
+[  OK  ] RESULT crCLIM_50km/test_1: crCLIM 50km
+[  OK  ] RESULT crCLIM_2km/test_1_gpu: crCLIM 2km
+[  OK  ] RESULT crCLIM_12km/test_1_gpu: crCLIM 12km
+[  OK  ] RESULT crCLIM_50km/test_1_gpu: crCLIM 50km
+```
+Obviously the model needs more testing.
+Please open a "GitHub issue" or a pull request on the repository to help improve this section.
