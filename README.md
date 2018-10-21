@@ -43,9 +43,9 @@ $ ./build_crclim_libs.sh -h
 Usage: build_crclim_libs.sh -p project -t target -i path [-z]
 ```
 where `-p` is the project (or setup): `crclim` or `cordex`, the `-t` is the target: `cpu` or `gpu`, and `-i` the module install path.
-For example installing Stella and the Dycore with the Cordex setup for CPU in `/scratch/username/install/`:
+For example installing Stella and the Dycore with the Cordex setup for GPU in `/scratch/username/install/`:
 ```
-$ ./build_crclim_libs.sh -p cordex -t cpu -i /scratch/username/install/
+$ ./build_crclim_libs.sh -p cordex -t gpu -i /scratch/username/install/
 ```
 and note that the install directory must exist **before** executing the script.
 At the end the script output variables to export and module to load:
@@ -80,15 +80,51 @@ and replace the Daint environment by the one provided by this repository:
 $ cp /scratch/username/eb-cosmo/env/env.daint.sh test/jenkins/env/
 ```
 
-As we previously installed the Cordex DyCore for CPU, we load the all corresponding modules:  
+As we previously installed the Cordex DyCore for GPU, update the `Options.lib.gpu` with the following content:
 ```
-$ module load DYCORE_CRCLIM_CPU/cordex-CrayGNU-18.08-double
+# STELLA library
+STELLA   = ${EBROOTSTELLA_CRCLIM}
+STELLAL  = -L${EBROOTSTELLA_CRCLIM}/lib -lCommunicationFrameworkCUDA -ljson -lStellaCUDA -lgcl -lStellaUtils -lSharedInfrastructureCUDA -lstdc++
+STELLAI  = -I${EBROOTSTELLA_CRCLIM}/include/STELLA
+
+# Dycore library
+DYCORE   = ${EBROOTDYCORE_CRCLIM_GPU}
+DYCOREL  = -L${EBROOTDYCORE_CRCLIM_GPU}/lib -lDycoreWrapperCUDA -lDycoreCUDA
+DYCOREI  =
+```
+If you compile another version of Cosmo targeting the other architecture (i.e. the CPU) you need to update the `Options.lib.cpu` with the corresponding variable: `EBROOTDYCORE_CRCLIM_GPU`.
+The extended tutorial provides more details about these files and variables.
+
+And load all corresponding modules:  
+```
+$ module load DYCORE_CRCLIM_GPU/cordex-CrayGNU-18.08-double
 ```
 and we run the Cosmo build script:
 ```
-$ test/jenkins/./build.sh -z -c cray -t gpu -x $EBVERSIONDYCORE_CRCLIM_GPU
+$ test/jenkins/./build.sh -c cray -t gpu -x $EBROOTDYCORE_CRCLIM_GPU
 ```
 et voila! After waiting between 60 and 90 minutes you have a working Cosmo executable.
+
+# Running the model
+
+Running the model on Daint may also not be trivial.
+So if you plan a CPU run, you should add the following in your submit script:
+```
+module load craype-accel-nvidia60
+
+export MALLOC_MMAP_MAX_=0
+export MALLOC_TRIM_THRESHOLD_=536870912
+export OMP_NUM_THREADS=1
+export CDO_EXEC=/apps/daint/UES/jenkins/6.0.UP04/gpu/easybuild/software/CDO/1.9.0-CrayGNU-17.08/bin/cdo
+
+ulimit -s unlimited
+ulimit -a
+```
+And if you plan a GPU run, add the following to the previous in your submit script:
+```
+module load daint-gpu
+export MPICH_RDMA_ENABLED_CUDA=1
+```
 
 # Extended version of the tutorial
 
@@ -288,22 +324,72 @@ and replace the Daint environment by the one provided by this repository:
 $ cp /scratch/username/eb-cosmo/env/env.daint.sh test/jenkins/env/
 ```
 
+You also need update the corresponding options file:
+  * `Options.lib.cpu` if you plan to compile an executable for CPU
+  * `Options.lib.gpu` if you plan to compile an executable for GPU
 
-you can almost start to build Cosmo, you just need to replace the `env.daint.sh` as the one in the `buildenv` is not adapted anymore to build the model on Daint.
-Start by triggering environment fetching by executing:
+where you have to update the path to Stella and the Dycore.
+Find the corresponding section in the file and replace them according your setup:
+  * The crCLIM setup targeting the CPU in `Options.lib.cpu`
 ```
-$ cd cosmo-pompa/cosmo
-$ test/jenkins/build.sh -h
+# STELLA library
+STELLA   = $(EBROOTSTELLA_CRCLIM)
+STELLAL  = -L$(EBROOTSTELLA_CRCLIM)/lib -lCommunicationFramework -ljson -lStella -lgcl -lStellaUtils -lSharedInfrastructure -lstdc++
+STELLAI  =
+
+# Dycore library
+DYCORE   = $(EBROOTDYCORE_CRCLIM_CPU)
+DYCOREL  = -L$(EBROOTDYCORE_CRCLIM_CPU)/lib -lDycoreWrapper -lDycore
+DYCOREI  =
 ```
-then replace the Daint environment:
+  * The Cordex setup targeting the CPU in `Options.lib.cpu`
 ```
-$ cp env.daint.sh test/jenkins/env/
+# STELLA library
+STELLA   = $(EBROOTSTELLA_CORDEX)
+STELLAL  = -L$(EBROOTSTELLA_CORDEX)/lib -lCommunicationFramework -ljson -lStella -lgcl -lStellaUtils -lSharedInfrastructure -lstdc++
+STELLAI  =
+
+# Dycore library
+DYCORE   = $(EBROOTDYCORE_CORDEX_CPU)
+DYCOREL  = -L$(EBROOTDYCORE_CORDEX_CPU)/lib -lDycoreWrapper -lDycore
+DYCOREI  =
 ```
-and execute the build script as usual:
+  * The crCLIM setup targeting the GPU in `Options.lib.gpu`
+```
+# STELLA library
+STELLA   = $(EBROOTSTELLA_CRCLIM)
+STELLAL  = -L$(EBROOTSTELLA_CRCLIM)/lib -lCommunicationFrameworkCUDA -ljson -lStellaCUDA -lgcl -lStellaUtils -lSharedInfrastructureCUDA -lstdc++
+STELLAI  =
+
+# Dycore library
+DYCORE   = $(EBROOTDYCORE_CRCLIM_GPU)
+DYCOREL  = -L$(EBROOTDYCORE_CRCLIM_GPU)/lib -lDycoreWrapperCUDA -lDycoreCUDA
+DYCOREI  =
+```
+  * The Cordex setup targeting the GPU in `Options.lib.gpu`
+```
+# STELLA library
+STELLA   = $(EBROOTSTELLA_CORDEX)
+STELLAL  = -L$(EBROOTSTELLA_CORDEX)/lib -lCommunicationFrameworkCUDA -ljson -lStellaCUDA -lgcl -lStellaUtils -lSharedInfrastructureCUDA -lstdc++
+STELLAI  =
+
+# Dycore library
+DYCORE   = $(EBROOTDYCORE_CORDEX_GPU)
+DYCOREL  = -L$(EBROOTDYCORE_CORDEX_GPU)/lib -lDycoreWrapperCUDA -lDycoreCUDA
+DYCOREI  =
+```
+
+If you compile another version of Cosmo targeting the other architecture (i.e. the CPU) you need to update the `Options.lib.cpu` with the corresponding variable: `EBROOTDYCORE_CRCLIM_GPU`.
+The extended tutorial provides more details about these files and variables.
+
+Finally execute the build script as usual.
+For example:
 ```
 $ test/jenkins/./build.sh -c cray -t gpu -x $EBROOTDYCORE_CRCLIM_GPU
 ```
-and you're done! After waiting between 60 to 90 minutes, you have a working Cosmo executable.
+but replace the `-x` value with the Dycore that suits your needs.
+
+And you're done! After waiting between 60 to 90 minutes, you have a working Cosmo executable.
 
 # Troubleshooting
 This section covers some issues that you may encounter when trying to build the model.
