@@ -188,6 +188,7 @@ unsetCppEnvironment()
     fi
     module unload gcc
     module load gcc/6.2.0
+ #   module load cray-netcdf/4.6.1.2
     if [ "${target}" == "gpu" ] ; then
         module load cray-libsci_acc/18.07.1
         module load craype-accel-nvidia60
@@ -332,6 +333,7 @@ unsetFortranEnvironment()
     fi
     module unload gcc
     module load gcc/6.2.0 
+#    module load cray-netcdf/4.6.1.2
     if [ "${target}" == "gpu" ] ; then
         module load cray-libsci_acc/18.07.1
         module load craype-accel-nvidia60
