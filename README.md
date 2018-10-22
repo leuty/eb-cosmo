@@ -4,11 +4,11 @@ This is a temporary tutorial to allow people to build their own version of crCLI
 The steps are only describing on how to compile the model **on DAINT with the CRAY compiler** .
 
 The idea is that now each one will compile its own version of Stella and the Dycore, install it as a module and load it when one need to compile Cosmo.
-Then to compile Cosmo one use the classic build script but provide the personal version of the Dycore to the build script.
+Then to compile Cosmo one can use the classic build script and provide the personal version of the Dycore to the build script.
 
 We provide a TL;DR for the impatient.
 But it's recommended that you read the full documentation.
-As compiling the model is very slow on Daint (it takes on average 50-60 minutes!), you may trigger the compilation with the instruction in the TL;DR section and read the full documentation while it's compiling. 
+As compiling the model is very slow on Daint (it takes on average 60 minutes!), you may trigger the compilation with the instruction in the TL;DR section and read the full documentation while it's compiling. 
 If the TL;DR doesn't work, read the full documentation.
 
 # TL;DR
@@ -24,6 +24,14 @@ $ cd cosmo-pompa
 which would put us in the following directory:
 ```
 /scratch/username/cosmo-pompa
+```
+If you change directory it will be like:
+```
+$ cd cosmo-pompa
+```
+and look like:
+```
+cosmo-pompa/$ 
 ```
 All the instructions obviously apply for any working directory.
 
@@ -42,13 +50,13 @@ $ cd eb-cosmo
 
 Use the new dirver script to build the libraries needed to build Cosmo:
 ```
-$ ./build_crclim_libs.sh -h
+eb-cosmo/$ ./build_crclim_libs.sh -h
 Usage: build_crclim_libs.sh -p project -t target -i path [-z]
 ```
 where `-p` is the project (or setup): `crclim` or `cordex`, the `-t` is the target: `cpu` or `gpu`, and `-i` the module install path.
 For example installing Stella and the Dycore with the Cordex setup for GPU in `/scratch/username/install/`:
 ```
-$ ./build_crclim_libs.sh -p cordex -t gpu -i /scratch/username/install/
+eb-cosmo/$ ./build_crclim_libs.sh -p cordex -t gpu -i /scratch/username/install/
 ```
 and note that **the install directory must exist before executing the script**.
 At the end the script output variables to export and module to load:
@@ -76,11 +84,11 @@ $ cd /scratch/username/cosmo-pompa/cosmo
 ```
 execute the Cosmo builds script to fetch the environnement (it's a git submodule of cosmo-pompa):
 ```
-$ test/jenkins/build.sh -h
+cosmo-pompa/cosmo/$ test/jenkins/build.sh -h
 ```
 and replace the Daint environment by the one provided by this repository:
 ```
-$ cp /scratch/username/eb-cosmo/env/env.daint.sh test/jenkins/env/
+cosmo-pompa/cosmo/$ cp /scratch/username/eb-cosmo/env/env.daint.sh test/jenkins/env/
 ```
 
 As we previously installed the Cordex Dycore for GPU, update the `Options.lib.gpu` with the following content:
@@ -100,11 +108,11 @@ The extended tutorial provides more details about these files and variables.
 
 Load all corresponding modules:  
 ```
-$ module load DYCORE_CRCLIM_GPU/cordex-CrayGNU-18.08-double
+cosmo-pompa/cosmo/$ module load DYCORE_CRCLIM_GPU/cordex-CrayGNU-18.08-double
 ```
 and run the Cosmo build script:
 ```
-$ test/jenkins/./build.sh -c cray -t gpu -x $EBROOTDYCORE_CRCLIM_GPU
+cosmo-pompa/cosmo/$ test/jenkins/./build.sh -c cray -t gpu -x $EBROOTDYCORE_CRCLIM_GPU
 ```
 et voila! After waiting between 60 and 90 minutes you have a working Cosmo executable.
 
@@ -112,6 +120,16 @@ et voila! After waiting between 60 and 90 minutes you have a working Cosmo execu
 
 Running the model on Daint may also not be trivial.
 So if you plan a CPU run, you should add the following in your submit script:
+```
+export MALLOC_MMAP_MAX_=0
+export MALLOC_TRIM_THRESHOLD_=536870912
+export OMP_NUM_THREADS=1
+export CDO_EXEC=/apps/daint/UES/jenkins/6.0.UP04/gpu/easybuild/software/CDO/1.9.0-CrayGNU-17.08/bin/cdo
+
+ulimit -s unlimited
+ulimit -a
+```
+And if you plan a GPU run, add the following in your submit script:
 ```
 module load craype-accel-nvidia60
 
@@ -122,9 +140,6 @@ export CDO_EXEC=/apps/daint/UES/jenkins/6.0.UP04/gpu/easybuild/software/CDO/1.9.
 
 ulimit -s unlimited
 ulimit -a
-```
-And if you plan a GPU run, add the following to the previous in your submit script:
-```
 module load daint-gpu
 export MPICH_RDMA_ENABLED_CUDA=1
 ```
@@ -186,7 +201,7 @@ To invoke the script you should provide at least:
 
 The command line help describes what you should pass to the script:
 ```
-$ ./build_crclim_libs.sh -h
+eb-cosmo/$ ./build_crclim_libs.sh -h
 Usage: build_crclim_libs.sh -p project -t target [-z]
 
 Arguments:
@@ -210,7 +225,7 @@ The easiest way to hack it, was to create the "release" (i.e. the archive) on th
 
 The script also invokes EB to build `grib_api` and `libgrib_api`, through CSCS EB config files (however this is failing), as long with Stella and the C++ Dycore:
 ```
-$ ./build_crclim_libs.sh -t gpu -p cordex -i  /scratch/username/install/
+eb-cosmo/$ ./build_crclim_libs.sh -t gpu -p cordex -i  /scratch/username/install/
 ```
 in this example with `-p cordex` we ensure that Stella is built with `KFLAT=8` and `KLEVEL=40` and that the Dycore will be build for GPU and use the corresponding version of Stella. 
 The correct version is selected according the values provided with the flags:
@@ -225,7 +240,7 @@ If you need another one, please open a "GitHub issue" on that repository.
 The script starts to print the requested configuration.
 For example:
 ```
-$ ./build_crclim_libs.sh -t gpu -p crclim
+eb-cosmo/$ ./build_crclim_libs.sh -t gpu -p crclim
 ===========================================================
 Compiling STELLA and the C++ DyCore as modules
 ===========================================================
@@ -322,11 +337,11 @@ $ cd /scratch/username/cosmo-pompa/cosmo
 ```
 and execute the Cosmo builds script to fetch the environnement (as it is a git submodule):
 ```
-$ test/jenkins/build.sh -h
+cosmo-pompa/cosmo/$ test/jenkins/build.sh -h
 ```
 and replace the Daint environment by the one provided by this repository:
 ```
-$ cp /scratch/username/eb-cosmo/env/env.daint.sh test/jenkins/env/
+cosmo-pompa/cosmo/$ cp /scratch/username/eb-cosmo/env/env.daint.sh test/jenkins/env/
 ```
 
 You also need update the corresponding options file:
@@ -387,7 +402,7 @@ DYCOREI  =
 Finally execute the build script as usual.
 For example:
 ```
-$ test/jenkins/./build.sh -c cray -t gpu -x $EBROOTDYCORE_CRCLIM_GPU
+cosmo-pompa/cosmo/$ test/jenkins/./build.sh -c cray -t gpu -x $EBROOTDYCORE_CRCLIM_GPU
 ```
 but replace the `-x` value with the Dycore that suits your needs.
 
