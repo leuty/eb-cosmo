@@ -1,10 +1,13 @@
 # Building Cosmo with EB and the build script
 
-This is a temporary tutorial to allow people to build their own version of crCLIM COSMO-pompa.
+This is a temporary tutorial to allow people to build their own version of crCLIM COSMO-pompa (CrCLIM or Cordex setup).
 The steps are only describing on how to compile the model **on DAINT with the CRAY compiler** .
 
-The idea is that now each one will compile its own version of Stella and the Dycore, install it as a module and load it when one need to compile Cosmo.
-Then to compile Cosmo one can use the classic build script and provide the personal version of the Dycore to the build script.
+The idea is that now each one will: 
+  * compile its own version of Stella and the Dycore, 
+  * install it as a module 
+  * load it when one need to compile Cosmo.
+Then to compile Cosmo one can use the classic build script and provide its personal version of the Dycore to the build script.
 
 We provide a TL;DR for the impatient.
 But it's recommended that you read the full documentation.
@@ -21,13 +24,9 @@ if nothing is specified, you should assume that this is the current working dire
 ```
 $ cd cosmo-pompa
 ```
-which would put us in the following directory:
+which would change in the following directory:
 ```
 /scratch/username/cosmo-pompa
-```
-If you change directory it will be like:
-```
-$ cd cosmo-pompa
 ```
 and look like:
 ```
@@ -43,12 +42,12 @@ Clone this repository:
 ```
 $ git clone git@github.com:PallasKat/eb-cosmo.git
 ```
-and go in it's directory:
+and go in its directory:
 ```
 $ cd eb-cosmo
 ```
 
-Use the new dirver script to build the libraries needed to build Cosmo:
+Use the new driver script `build_crclim_libs.sh` to build the libraries needed to build Cosmo:
 ```
 eb-cosmo/$ ./build_crclim_libs.sh -h
 Usage: build_crclim_libs.sh -p project -t target -i path [-z]
@@ -59,7 +58,7 @@ For example installing Stella and the Dycore with the Cordex setup for GPU in `/
 eb-cosmo/$ ./build_crclim_libs.sh -p cordex -t gpu -i /scratch/username/install/
 ```
 and note that **the install directory must exist before executing the script**.
-At the end the script output variables to export and module to load:
+At the end the script output variables to export and modules to load:
 ```
 # EXECUTE THE FOLLOWING COMMANDS IN YOUR TERMINAL #
 # BEFORE INSTALLING COSMO                         #
@@ -74,7 +73,7 @@ and execute them in your current environment (i.e. terminal).
 ## Building Cosmo-pompa
 
 Change to the directory containing the Cosmo source you want to compile.
-For example, let's assume that the Cosmo we want to compile is here:
+For example, let's assume that the model we want to compile is here:
 ```
 /scratch/username/cosmo-pompa/cosmo
 ```
@@ -86,7 +85,7 @@ execute the Cosmo builds script to fetch the environnement (it's a git submodule
 ```
 cosmo-pompa/cosmo/$ test/jenkins/build.sh -h
 ```
-and replace the Daint environment by the one provided by this repository:
+and replace the Daint environment by the one provided in this repository:
 ```
 cosmo-pompa/cosmo/$ cp /scratch/username/eb-cosmo/env/env.daint.sh test/jenkins/env/
 ```
@@ -103,23 +102,23 @@ DYCORE   = ${EBROOTDYCORE_CRCLIM_GPU}
 DYCOREL  = -L${EBROOTDYCORE_CRCLIM_GPU}/lib -lDycoreWrapperCUDA -lDycoreCUDA
 DYCOREI  =
 ```
-If you compile another version of Cosmo targeting the other architecture (i.e. the CPU) you need to update the `Options.lib.cpu` with the corresponding variable: `EBROOTDYCORE_CRCLIM_GPU`.
+If you compile another version of Cosmo targeting the CPU, you need to update the `Options.lib.cpu` with the corresponding variable: `EBROOTDYCORE_CRCLIM_GPU`.
 The extended tutorial provides more details about these files and variables.
 
 Load all corresponding modules:  
 ```
 cosmo-pompa/cosmo/$ module load DYCORE_CRCLIM_GPU/cordex-CrayGNU-18.08-double
 ```
-and run the Cosmo build script:
+and run the good old Cosmo build script:
 ```
 cosmo-pompa/cosmo/$ test/jenkins/./build.sh -c cray -t gpu -x $EBROOTDYCORE_CRCLIM_GPU
 ```
-et voila! After waiting between 60 and 90 minutes you have a working Cosmo executable.
+et voila! After waiting ~60 minutes you have a working Cosmo executable.
 
 # Running the model
 
 Running the model on Daint may also not be trivial.
-So if you plan a CPU run, you should add the following in your submit script:
+So if you plan a **CPU run**, you should add the following in your submit script:
 ```
 export MALLOC_MMAP_MAX_=0
 export MALLOC_TRIM_THRESHOLD_=536870912
@@ -129,7 +128,7 @@ export CDO_EXEC=/apps/daint/UES/jenkins/6.0.UP04/gpu/easybuild/software/CDO/1.9.
 ulimit -s unlimited
 ulimit -a
 ```
-And if you plan a GPU run, add the following in your submit script:
+And if you plan a **GPU run**, add the following in your submit script:
 ```
 module load craype-accel-nvidia60
 
@@ -159,7 +158,7 @@ Clone this repository:
 ```
 $ git clone git@github.com:PallasKat/eb-cosmo.git
 ```
-and go in it's directory:
+and go in its directory:
 ```
 $ cd eb-cosmo
 ```
@@ -177,27 +176,27 @@ DYCORE_CRCLIM_CPU-CrayGNU-18.08-double.eb
 DYCORE_CRCLIM_GPU-CrayGNU-18.08-double.eb
 ```
 They respectively contain the information to build Stella and the Dycore with EB.
-You can deduce from the filenames that some are for the crCLIM or Cordex setup, and also some target the CPU or GPU.
+You can deduce from the filenames that some are for the crCLIM or Cordex setup, and some target the CPU or GPU.
 
 The difference compared to the classic build scripts is that EB is going to make Stella and the Dycore available as modules on Daint. 
-So once it's install you'll have to load the needed Dycore depending on the configuration you need for Cosmo.
+So once it's installed, you load the needed Dycore depending on the configuration you need for Cosmo.
 
 You don't have to invoke EB yourself, you should only use the provided  "driver" script `build_crclim_libs.sh`. 
-This script drives the call to EB to build the Stella and Dycore libraries and make them available as modules.
-The goal is to minimize the steps the domain scientist need to do and ensure coherence between the build.
+This script drives the calls to EB to build the Stella and Dycore libraries and make them available as modules.
+The goal is to minimize the steps the domain scientist need to do and ensure coherence between the builds.
 
-You can also see that there is a directory `env`.
-It contains environment specific to the post-update Daint.
+You can also see that there is a directory `env/`.
+It contains environment specific to the updated Daint.
 However as there is currently no agreement between MeteoSwiss and the CSCS on an unified way of building the model, the `buildenv` is not going to be updated.
 So these files need to be manually copied before building Cosmo.
 
 ## Building Stella and the Dycore
 
-You can build and install Stella and the Dycore with the driver script `build_crclim_libs.sh`.
+You can install Stella and the Dycore with the driver script `build_crclim_libs.sh`.
 To invoke the script you should provide at least:
   * the project (i.e. crclim or cordex), 
   * the targeted architecture (i.e. cpu or gpu) 
-  * and an install path. It's important to note that the install path must exist before executing the script.
+  * and an install path. It's important to note that the **install path must exist before executing the script**.
 
 The command line help describes what you should pass to the script:
 ```
