@@ -1,7 +1,7 @@
 # Building Cosmo with EB and the build script
 
 This is a temporary tutorial to allow people to build their own version of crCLIM COSMO-pompa.
-The steps are only describing on how to compile the model on **DAINT** with the **CRAY** compiler.
+The steps are only describing on how to compile the model **on DAINT with the CRAY compiler** .
 
 The idea is that now each one will compile its own version of Stella and the Dycore, install it as a module and load it when one need to compile Cosmo.
 Then to compile Cosmo one use the classic build script but provide the personal version of the Dycore to the build script.
@@ -27,7 +27,7 @@ which would put us in the following directory:
 ```
 All the instructions obviously apply for any working directory.
 
-As we're loading modules and changing the environment, we assume that everything is executed in the **same terminal**.
+As we're loading modules and changing the environment, we assume that **everything is executed in the same terminal**.
 
 ## Building Stella and the Dycore
 
@@ -50,7 +50,7 @@ For example installing Stella and the Dycore with the Cordex setup for GPU in `/
 ```
 $ ./build_crclim_libs.sh -p cordex -t gpu -i /scratch/username/install/
 ```
-and note that the install directory must exist **before** executing the script.
+and note that **the install directory must exist before executing the script**.
 At the end the script output variables to export and module to load:
 ```
 # EXECUTE THE FOLLOWING COMMANDS IN YOUR TERMINAL #
@@ -443,7 +443,7 @@ fatal: destination path 'cosmo-pompa' already exists and is not an empty directo
 and nothing is cloned.
 
 The `-z` flag is there to solve that issue and ensure that the repositories are **deleted** before cloning them again.
-The deletion occures **without warning and delay**.
+The **deletion occures without warning and delay**.
 So be careful otherwise you may loose your work.
 
 ## EB modules warning
