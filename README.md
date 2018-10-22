@@ -70,11 +70,11 @@ For example, let's assume that the Cosmo we want to compile is here:
 ```
 /scratch/username/cosmo-pompa/cosmo
 ```
-So we go there:
+So go there:
 ```
 $ cd /scratch/username/cosmo-pompa/cosmo
 ```
-and we start by executing the Cosmo builds script to fetch the environnement (it's a git submodule of cosmo-pompa):
+execute the Cosmo builds script to fetch the environnement (it's a git submodule of cosmo-pompa):
 ```
 $ test/jenkins/build.sh -h
 ```
@@ -83,7 +83,7 @@ and replace the Daint environment by the one provided by this repository:
 $ cp /scratch/username/eb-cosmo/env/env.daint.sh test/jenkins/env/
 ```
 
-As we previously installed the Cordex DyCore for GPU, update the `Options.lib.gpu` with the following content:
+As we previously installed the Cordex Dycore for GPU, update the `Options.lib.gpu` with the following content:
 ```
 # STELLA library
 STELLA   = ${EBROOTSTELLA_CRCLIM}
@@ -98,11 +98,11 @@ DYCOREI  =
 If you compile another version of Cosmo targeting the other architecture (i.e. the CPU) you need to update the `Options.lib.cpu` with the corresponding variable: `EBROOTDYCORE_CRCLIM_GPU`.
 The extended tutorial provides more details about these files and variables.
 
-And load all corresponding modules:  
+Load all corresponding modules:  
 ```
 $ module load DYCORE_CRCLIM_GPU/cordex-CrayGNU-18.08-double
 ```
-and we run the Cosmo build script:
+and run the Cosmo build script:
 ```
 $ test/jenkins/./build.sh -c cray -t gpu -x $EBROOTDYCORE_CRCLIM_GPU
 ```
@@ -135,7 +135,7 @@ This extended version assume that you've read the TL;DR once.
 This extended version provide details to better understand the new process of building the libraries needed for the Cosmo model.
 
 It's important to notice that this current approach is diverging from the one used by MeteoSwiss and thus cannot be yet applied on Kesch.
-This also mean that currently we cannot (and we won't) merge it into the `crclim` branch of Cosmo-pompa.
+This also means that currently we cannot (and we won't) merge it into the `crclim` branch of Cosmo-pompa.
 That's why all this stays for now in its own repository.
 
 ## About the repository
@@ -162,7 +162,7 @@ DYCORE_CRCLIM_CPU-CrayGNU-18.08-double.eb
 DYCORE_CRCLIM_GPU-CrayGNU-18.08-double.eb
 ```
 They respectively contain the information to build Stella and the Dycore with EB.
-You can deduce from the filenames that some are for the crCLIM or Cordex setup, and also to target the either the CPU or GPU.
+You can deduce from the filenames that some are for the crCLIM or Cordex setup, and also some target the CPU or GPU.
 
 The difference compared to the classic build scripts is that EB is going to make Stella and the Dycore available as modules on Daint. 
 So once it's install you'll have to load the needed Dycore depending on the configuration you need for Cosmo.
@@ -206,7 +206,7 @@ Once the sources are fetched, it creates an archive of the sources (a `tar.gz` f
   * one for the Dycore: `dycore.tar.gz`.
 
 This is because we don't have release yet and EB is expecting an archive from a release or a files list.
-The easiest way to hack it was to create the "release" (i.e. the archive) on the fly from the cloned repositories. 
+The easiest way to hack it, was to create the "release" (i.e. the archive) on the fly from the cloned repositories. 
 
 The script also invokes EB to build `grib_api` and `libgrib_api`, through CSCS EB config files (however this is failing), as long with Stella and the C++ Dycore:
 ```
@@ -256,11 +256,13 @@ module load EasyBuild-custom
 ```
 copy and past them in your terminal before trying to load the Stella and Dycore modules.
 Now both libraries (Stella and the DyCore) will be available through modules loading.
+When you login again on Daint, you should redo the previous export and load commands if you need the installed Stella or Dycore . 
 
 ## Building COSMO
 
 Once the needed modules are loaded, you can see that the installed libraries are available:
 ```
+$ module avail
 ------------ /scratch/username/install/modules/all ------------
 DYCORE_CRCLIM_GPU/crclim-CrayGNU-18.08-double 
 Serialbox/2.4.1-CrayGNU-18.08                 
@@ -271,7 +273,7 @@ grib_api/1.13.1-CrayCCE-18.08
 You can see here that we have access to a Dycore with the crCLIM setup compiled for GPU (`DYCORE_CRCLIM_GPU`).
 To use it, you load it as any other module:
 ```
-module load DYCORE_CRCLIM_GPU/crclim-CrayGNU-18.08-double
+$ module load DYCORE_CRCLIM_GPU/crclim-CrayGNU-18.08-double
 ```
 which export a variable `EBROOTDYCORE_CRCLIM_GPU`:
 ```
@@ -381,9 +383,6 @@ DYCORE   = $(EBROOTDYCORE_CORDEX_GPU)
 DYCOREL  = -L$(EBROOTDYCORE_CORDEX_GPU)/lib -lDycoreWrapperCUDA -lDycoreCUDA
 DYCOREI  =
 ```
-
-If you compile another version of Cosmo targeting the other architecture (i.e. the CPU) you need to update the `Options.lib.cpu` with the corresponding variable: `EBROOTDYCORE_CRCLIM_GPU`.
-The extended tutorial provides more details about these files and variables.
 
 Finally execute the build script as usual.
 For example:
