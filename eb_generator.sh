@@ -114,6 +114,8 @@ parseOptions()
     fi
 }
 
+source utils.sh
+
 parseOptions "$@"
 showConfig
 

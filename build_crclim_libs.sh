@@ -1,76 +1,31 @@
 #!/bin/bash
 
-pWarning()
-{
-  msg=$1
-  YELLOW='\033[1;33m'
-  NC='\033[0m'
-  echo -e "${YELLOW}[WARNING]${NC} ${msg}"
-}
-
-pInfo()
-{
-  msg=$1
-  BLUE='\033[1;34m'
-  NC='\033[0m'
-  echo -e "${BLUE}[INFO]${NC} ${msg}"
-}
-
-pOk()
-{
-  msg=$1
-  GREEN='\033[1;32m'
-  NC='\033[0m'
-  echo -e "${GREEN}[OK]${NC} ${msg}"
-}
-
-pErr()
-{
-    msg=$1
-    RED='\033[0;31m'
-    NC='\033[0m'
-	echo -e "${RED}[ERROR]${NC} ${msg}"
-}
-
-exitError()
-{
-    RED='\033[0;31m'
-    NC='\033[0m'
-	echo -e "${RED}EXIT WITH ERROR${NC}"
-	echo "ERROR $1: $3" 1>&2
-	echo "ERROR     LOCATION=$0" 1>&2
-	echo "ERROR     LINE=$2" 1>&2
-	exit "$1"
-}
-
 showUsage()
 {
-    echo "Usage: $(basename $0) -p project -t target -i path [-z]"
+    echo "Usage: $(basename $0) -p project -t target -i path [-x] [-z]"
     echo ""
     echo "Arguments:"
-    echo "-h           show this help message and exit"
-    echo "-p project   build project: crclim or cordex"
-    echo "-t target    build target: cpu or gpu"
-    echo "-i path      install path for the modules (EB prefix, the directory must exist)"
-    echo "-z           clean any existing repository, reclone it, and create new source archive"
+    echo "-h             show this help message and exit"
+    echo "-p project     build project: crclim or cordex"
+    echo "-t target      build target: cpu or gpu"
+    echo "-i path        install path for the modules (EB prefix, the directory must exist)"
+    echo "-x bit-repro   try to build a CPU-GPU bit-reproducible model"
+    echo "-z             clean any existing repository, reclone it, and create new source archive"
 }
 
 showConfig()
 {
     echo "==========================================================="
-    echo "Compiling STELLA and the C++ DyCore as modules"
+    echo "Compiling STELLA and the C++ Dycore as modules"
     echo "==========================================================="
-    echo "Date             : $(date)"
-    echo "Machine          : ${HOSTNAME}"
-    echo "User             : $(whoami)"
-    echo "Architecture"
-    echo "   CPU           : ${CPU}"
-    echo "   GPU           : ${GPU}"
-    echo "Project"
-    echo "   crCRLIM       : ${CRCLIM}"
-    echo "   Cordex        : ${CORDEX}"
-    echo "Cleanup          : ${CLEANUP}"
-    echo "Install path     : ${INSTPATH}"
+    echo "Date               : $(date)"
+    echo "Machine            : ${HOSTNAME}"
+    echo "User               : $(whoami)"
+    echo "Architecture       : ${TARGET}"
+    echo "Project            : ${PROJECT}"
+    echo "Bit-reproducible   : ${BITREPROD}"
+    echo "Cleanup            : ${CLEANUP}"
+    echo "Install path       : ${INSTPATH}"
     echo "==========================================================="
 }
 
@@ -78,15 +33,12 @@ parseOptions()
 {
     # set defaults
     PROJECT=OFF
-    CRCLIM=OFF
-    CORDEX=OFF
     TARGET=OFF
     INSTPATH=OFF
-    GPU=OFF
-    CPU=OFF
     CLEANUP=OFF
+    BITREPROD=OFF
     
-    while getopts ":p:t:i:hz" opt; do
+    while getopts ":p:t:i:hxz" opt; do
         case $opt in
         p)
             PROJECT=$OPTARG
@@ -100,6 +52,9 @@ parseOptions()
         h)
             showUsage
             exit 0
+            ;;
+        x)
+            BITREPROD=ON
             ;;
         z)
             CLEANUP=ON
@@ -115,26 +70,18 @@ parseOptions()
         esac
     done
 
-    if [ "${TARGET,,}" = "cpu" ]
+    TARGET=${TARGET^^}
+    if [ "${TARGET}" != "CPU" ] && [ "${TARGET}" != "GPU" ]
     then
-        CPU=ON
-    elif [ "${TARGET,,}" = "gpu" ]
-    then
-        GPU=ON
-    else
         pErr "Incorrect target provided: ${TARGET}"
         pErr "Target can only be CPU or GPU"
         showUsage
         exit 1
     fi
 
-    if [ "${PROJECT,,}" = "crclim" ]
+    PROJECT=${PROJECT^^}
+    if [ "${PROJECT}" != "CRCLIM" ] && [ "${PROJECT}" != "CORDEX" ]
     then
-        CRCLIM=ON
-    elif [ "${PROJECT,,}" = "cordex" ]
-    then
-        CORDEX=ON
-    else
         pErr "Incorrect target provided: ${PROJECT}"
         pErr "Project can only be CRCLIM or CORDEX"
         showUsage
@@ -203,16 +150,42 @@ getDycore()
     tar -zcf "${targz}" -C "${cosmoDir}" dycore VERSION STELLA_VERSION
 }
 
+sedIt()
+{
+    proj=$1
+    targ=$2    
+
+    template="env/template.${targ,,}"
+    if [ ! -f ${template} ]
+    then
+        pErr "File ${template} not found "
+        exit 1
+    fi
+
+    stellaOpt="EBROOTSTELLA_${proj}"
+    dycoreOpt="EBROOTDYCORE_${proj}_${targ}"
+    optFile="Option.lib.${targ,,}"
+
+    sed "s@%STELLADIR%@\"${stellaOpt}\"@g" "${template}" > "${optFile}"
+    contOrExit "SED STELLA" $?
+    sed -i "s@%DYCOREDIR%@\"${dycoreOpt}\"@g" "${optFile}"
+    contOrExit "SED DYCORE" $?
+}
+
+# ===========================================================
+# MAIN PROGRAM
+# ===========================================================
+source utils.sh
+source eb_crclim.sh
+
 parseOptions "$@"
 showConfig
 
 pInfo "Exporting variables and load modules"
-#installPath="/scratch/snx1600/charpill/post-update/install/"
 exportVar "${INSTPATH}"
 loadModule
 
-# get crclim branch reprositories and  
-# create corresponding source archives
+# get crclim branch reprositories and create corresponding source archives
 pInfo "Getting source code and creating archives"
 getStella "crclim" "C2SM-RCM"
 getDycore "crclim" "C2SM-RCM"
@@ -221,37 +194,47 @@ pInfo "Compiling and installing grib libraries (CSCS EB config)"
 eb grib_api-1.13.1-CrayCCE-18.08.eb -r
 eb libgrib1_crclim-a1e4271-CrayCCE-18.08.eb -r
 
-if [ "${CRCLIM}" == "ON" ]
+# generating EB config filename
+bitreprodSuffix=""
+if [ "${BITREPROD}" == "ON" ]
 then
-    pInfo "Compiling and installing crCLIM Stella"
-    eb STELLA_CRCLIM-CrayGNU-18.08-double.eb -r
-    if [ "${CPU}" == "ON" ]
-    then
-        pInfo "Compiling and installing crCLIM CPU Dycore"
-        eb DYCORE_CRCLIM_CPU-CrayGNU-18.08-double.eb -r
-    else
-        pInfo "Compiling and installing crCLIM GPU Dycore"
-        eb DYCORE_CRCLIM_GPU-CrayGNU-18.08-double.eb -r
-    fi
-else
-    pInfo "Compiling and installing Cordex Stella"
-    eb STELLA_CORDEX-CrayGNU-18.08-double.eb -r
-    if [ "${CPU}" == "ON" ]
-    then
-        pInfo "Compiling and installing Cordex CPU Dycore"
-        eb DYCORE_CORDEX_CPU-CrayGNU-18.08-double.eb -r
-    else
-        pInfo "Compiling and installing Cordex GPU Dycore"
-        eb DYCORE_CORDEX_GPU-CrayGNU-18.08-double.eb -r
-    fi
+    bitreprodSuffix="-bitreprod"
 fi
 
-echo ""
-echo "# EXECUTE THE FOLLOWING COMMANDS IN YOUR TERMINAL #"
-echo "# BEFORE INSTALLING COSMO                         #"
-echo ""
-echo "export EASYBUILD_PREFIX=${INSTPATH}"
-echo "export EASYBUILD_BUILDPATH=/tmp/${USER}/easybuild"
-echo "module load daint-gpu"
-echo "module load EasyBuild-custom"
-echo ""
+ebStella="STELLA_${PROJECT}-CrayGNU-18.08-double${bitreprodSuffix}.eb"
+ebDycore="DYCORE_${PROJECT}_${TARGET}-CrayGNU-18.08-double${bitreprodSuffix}.eb"
+
+# using EB to compile Stella and the Dycore
+pInfo "Compiling and installing ${PROJECT} Stella"
+eb ${ebStella} -r
+contOrExit "STELLA EB" $?
+
+pInfo "Compiling and installing ${PROJECT} ${TARGET} Dycore"
+eb ${ebDycore} -r
+contOrExit "DYCORE EB" $?
+
+# prepare the new option.lib files
+sedIt ${PROJECT} ${TARGET}
+
+# prepare an info "export and load" file for the user
+if [ "${TARGET}" == "CPU" ]
+then
+cat <<EOT > ${INSTPATH}/export_load_cpu.txt
+export EASYBUILD_PREFIX=${INSTPATH}
+export EASYBUILD_BUILDPATH=/tmp/${USER}/easybuild
+module load daint-gpu
+module load EasyBuild-custom
+EOT
+fi
+
+if [ "${TARGET}" == "GPU" ]
+then
+cat <<EOT > ${INSTPATH}/export_load_gpu.txt
+export EASYBUILD_PREFIX=${INSTPATH}
+export EASYBUILD_BUILDPATH=/tmp/${USER}/easybuild
+module load daint-gpu
+module load EasyBuild-custom
+EOT
+fi
+
+exit 0
