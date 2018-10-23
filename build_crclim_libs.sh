@@ -1,5 +1,48 @@
 #!/bin/bash
 
+pWarning()
+{
+  msg=$1
+  YELLOW='\033[1;33m'
+  NC='\033[0m'
+  echo -e "${YELLOW}[WARNING]${NC} ${msg}"
+}
+
+pInfo()
+{
+  msg=$1
+  BLUE='\033[1;34m'
+  NC='\033[0m'
+  echo -e "${BLUE}[INFO]${NC} ${msg}"
+}
+
+pOk()
+{
+  msg=$1
+  GREEN='\033[1;32m'
+  NC='\033[0m'
+  echo -e "${GREEN}[OK]${NC} ${msg}"
+}
+
+pErr()
+{
+    msg=$1
+    RED='\033[0;31m'
+    NC='\033[0m'
+	echo -e "${RED}[ERROR]${NC} ${msg}"
+}
+
+exitError()
+{
+    RED='\033[0;31m'
+    NC='\033[0m'
+	echo -e "${RED}EXIT WITH ERROR${NC}"
+	echo "ERROR $1: $3" 1>&2
+	echo "ERROR     LOCATION=$0" 1>&2
+	echo "ERROR     LINE=$2" 1>&2
+	exit "$1"
+}
+
 showUsage()
 {
     echo "Usage: $(basename $0) -p project -t target -i path [-z]"
@@ -79,8 +122,8 @@ parseOptions()
     then
         GPU=ON
     else
-        echo "Incorrect target provided: ${TARGET}"
-        echo "Target can only be CPU or GPU"
+        pErr "Incorrect target provided: ${TARGET}"
+        pErr "Target can only be CPU or GPU"
         showUsage
         exit 1
     fi
@@ -92,16 +135,16 @@ parseOptions()
     then
         CORDEX=ON
     else
-        echo "Incorrect target provided: ${PROJECT}"
-        echo "Project can only be CRCLIM or CORDEX"
+        pErr "Incorrect target provided: ${PROJECT}"
+        pErr "Project can only be CRCLIM or CORDEX"
         showUsage
         exit 1
     fi
 
     if [ ! -d "${INSTPATH}" ]
     then
-        echo "Incorrect path provided: ${INSTPATH}"
-        echo "Please create the install directory BEFORE installing the libs"
+        pErr "Incorrect path provided: ${INSTPATH}"
+        pErr "Please create the install directory BEFORE installing the libs"
     fi
 }
 
@@ -163,42 +206,42 @@ getDycore()
 parseOptions "$@"
 showConfig
 
-echo "Exporting variables and load modules"
+pInfo "Exporting variables and load modules"
 #installPath="/scratch/snx1600/charpill/post-update/install/"
 exportVar "${INSTPATH}"
 loadModule
 
 # get crclim branch reprositories and  
 # create corresponding source archives
-echo "Getting source code and creating archives"
+pInfo "Getting source code and creating archives"
 getStella "crclim" "C2SM-RCM"
 getDycore "crclim" "C2SM-RCM"
 
-echo "Compiling and installing grib libraries (CSCS EB config)"
+pInfo "Compiling and installing grib libraries (CSCS EB config)"
 eb grib_api-1.13.1-CrayCCE-18.08.eb -r
 eb libgrib1_crclim-a1e4271-CrayCCE-18.08.eb -r
 
 if [ "${CRCLIM}" == "ON" ]
 then
-    echo "Compiling and installing crCLIM Stella"
+    pInfo "Compiling and installing crCLIM Stella"
     eb STELLA_CRCLIM-CrayGNU-18.08-double.eb -r
     if [ "${CPU}" == "ON" ]
     then
-        echo "Compiling and installing crCLIM CPU Dycore"
+        pInfo "Compiling and installing crCLIM CPU Dycore"
         eb DYCORE_CRCLIM_CPU-CrayGNU-18.08-double.eb -r
     else
-        echo "Compiling and installing crCLIM GPU Dycore"
+        pInfo "Compiling and installing crCLIM GPU Dycore"
         eb DYCORE_CRCLIM_GPU-CrayGNU-18.08-double.eb -r
     fi
 else
-    echo "Compiling and installing Cordex Stella"
+    pInfo "Compiling and installing Cordex Stella"
     eb STELLA_CORDEX-CrayGNU-18.08-double.eb -r
     if [ "${CPU}" == "ON" ]
     then
-        echo "Compiling and installing Cordex CPU Dycore"
+        pInfo "Compiling and installing Cordex CPU Dycore"
         eb DYCORE_CORDEX_CPU-CrayGNU-18.08-double.eb -r
     else
-        echo "Compiling and installing Cordex GPU Dycore"
+        pInfo "Compiling and installing Cordex GPU Dycore"
         eb DYCORE_CORDEX_GPU-CrayGNU-18.08-double.eb -r
     fi
 fi
