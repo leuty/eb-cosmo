@@ -152,6 +152,7 @@ getDycore()
 
 cleanup()
 {    
+    echo "MOCK CLEANUP"
 #    load module file
 #    rm -rf $EBROOTXXX
 #    rm module file
