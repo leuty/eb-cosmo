@@ -184,10 +184,12 @@ sedIt()
 # MAIN PROGRAM
 # ===========================================================
 source utils.sh
-source eb_crclim.sh
 
 parseOptions "$@"
 showConfig
+
+pInfo "Generating EB config files"
+source eb_crclim.sh
 
 pInfo "Exporting variables and load modules"
 exportVar "${INSTPATH}"
