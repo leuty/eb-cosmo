@@ -150,6 +150,13 @@ getDycore()
     tar -zcf "${targz}" -C "${cosmoDir}" dycore VERSION STELLA_VERSION
 }
 
+cleanup()
+{    
+#    load module file
+#    rm -rf $EBROOTXXX
+#    rm module file
+}
+
 sedIt()
 {
     proj=$1

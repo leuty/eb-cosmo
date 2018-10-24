@@ -1,3 +1,5 @@
+#!/bin/bash
+
 pWarning()
 {
   msg=$1
