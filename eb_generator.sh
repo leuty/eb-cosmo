@@ -119,7 +119,7 @@ source utils.sh
 parseOptions "$@"
 showConfig
 
-stellaEB="STELLA_${PROJECT}_${TARGET}-CrayGNU-18.08-double${VERSION_SUFFIX}.eb"
+stellaEB="STELLA_${PROJECT}-CrayGNU-18.08-double${VERSION_SUFFIX}.eb"
 dycoreEB="DYCORE_${PROJECT}_${TARGET}-CrayGNU-18.08-double${VERSION_SUFFIX}.eb"
 
 echo ${stellaEB}
