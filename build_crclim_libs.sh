@@ -163,7 +163,7 @@ sedIt()
     proj=$1
     targ=$2    
 
-    template="env/template.${targ,,}"
+    template="env/template.option"
     if [ ! -f ${template} ]
     then
         pErr "File ${template} not found "
