@@ -49,7 +49,7 @@ showUsage()
     echo ""
     echo "Arguments:"
     echo "-h           show this help message and exit"
-    echo "-p project   build project: crclim or cordex"
+    echo "-p project   build project: master, crclim or cordex"
     echo "-t target    build target: cpu or gpu"
     echo "-i path      install path for the modules (EB prefix, the directory must exist)"
     echo "-z           clean any existing repository, reclone it, and create new source archive"
@@ -67,6 +67,7 @@ showConfig()
     echo "   CPU           : ${CPU}"
     echo "   GPU           : ${GPU}"
     echo "Project"
+    echo "   master        : ${MASTER}"
     echo "   crCRLIM       : ${CRCLIM}"
     echo "   Cordex        : ${CORDEX}"
     echo "Cleanup          : ${CLEANUP}"
@@ -80,6 +81,7 @@ parseOptions()
     PROJECT=OFF
     CRCLIM=OFF
     CORDEX=OFF
+    MASTER=OFF
     TARGET=OFF
     INSTPATH=OFF
     GPU=OFF
@@ -134,9 +136,12 @@ parseOptions()
     elif [ "${PROJECT,,}" = "cordex" ]
     then
         CORDEX=ON
+    elif [ "${PROJECT,,}" = "master" ]
+    then
+        MASTER=ON
     else
         pErr "Incorrect target provided: ${PROJECT}"
-        pErr "Project can only be CRCLIM or CORDEX"
+        pErr "Project can only be master, crclim or cordex"
         showUsage
         exit 1
     fi
@@ -214,8 +219,14 @@ loadModule
 # get crclim branch reprositories and  
 # create corresponding source archives
 pInfo "Getting source code and creating archives"
-getStella "crclim" "C2SM-RCM"
-getDycore "crclim" "C2SM-RCM"
+if [ "${MASTER}" == "ON" ]
+then
+  getStella "master" "C2SM-RCM"
+  getDycore "master" "C2SM-RCM"
+else
+  getStella "crclim" "C2SM-RCM"
+  getDycore "crclim" "C2SM-RCM"
+fi
 
 pInfo "Compiling and installing grib libraries (CSCS EB config)"
 eb grib_api-1.13.1-CrayCCE-18.08.eb -r
@@ -232,6 +243,18 @@ then
     else
         pInfo "Compiling and installing crCLIM GPU Dycore"
         eb DYCORE_CRCLIM_GPU-CrayGNU-18.08-double.eb -r
+    fi
+elif [ "${MASTER}" == "ON" ]
+then 
+    pInfo "Compiling and installing master Stella"
+    eb STELLA_MASTER-CrayGNU-18.08-double.eb -r
+    if [ "${CPU}" == "ON" ]
+    then
+        pInfo "Compiling and installing master CPU Dycore"
+        eb DYCORE_MASTER_CPU-CrayGNU-18.08-double.eb -r
+    else
+        pInfo "Compiling and installing master GPU Dycore"
+        eb DYCORE_MASTER_GPU-CrayGNU-18.08-double.eb -r
     fi
 else
     pInfo "Compiling and installing Cordex Stella"

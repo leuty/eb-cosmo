@@ -1,0 +1,30 @@
+easyblock = 'CMakeMake'
+
+name = 'DYCORE_MASTER_GPU'
+version = 'master'
+versionsuffix = '-double'
+
+homepage = 'https://github.com/C2SM-RCM/cosmo-pompa/tree/master/dycore (-b master)'
+description = """COSMO Pompa Dynamical core for GPU (MASTER)"""
+
+toolchain = {'name': 'CrayGNU', 'version': '18.08'}
+toolchainopts = {'verbose': False}
+
+sources = [ {'filename': 'dycore.tar.gz'}, ]
+
+builddependencies = [ ('CMake', '3.12.0', '', True), ]
+
+dependencies = [
+    ('STELLA_MASTER', '%(version)s', '%(versionsuffix)s'),
+]
+
+srcdir = "../dycore"
+configopts  = "-DCMAKE_BUILD_TYPE=Release "
+configopts += "-DSINGLEPRECISION=OFF "
+configopts += "-DCUDA_BACKEND=%CUDA% "
+configopts += "-DSTELLA_DIR=${EBROOTSTELLA_MASTER} " 
+configopts += "-DBITREPRO=OFF "
+
+separate_build_dir = True
+
+moduleclass = 'devel'

@@ -163,10 +163,11 @@ and go in its directory:
 $ cd eb-cosmo
 ```
 where you can see that there are several easybuild (EB) config files.
-Two of them are for STELLA:
+Three of them are for STELLA:
 ```
 STELLA_CORDEX-CrayGNU-18.08-double.eb
 STELLA_CRCLIM-CrayGNU-18.08-double.eb
+STELLA_MASTER-CrayGNU-18.08-double.eb
 ```
 and the rest is for the C++ Dycore:
 ```
@@ -174,6 +175,8 @@ DYCORE_CORDEX_CPU-CrayGNU-18.08-double.eb
 DYCORE_CORDEX_GPU-CrayGNU-18.08-double.eb
 DYCORE_CRCLIM_CPU-CrayGNU-18.08-double.eb
 DYCORE_CRCLIM_GPU-CrayGNU-18.08-double.eb
+DYCORE_MASTER_CPU-CrayGNU-18.08-double.eb
+DYCORE_MASTER_GPU-CrayGNU-18.08-double.eb
 ```
 They respectively contain the information to build Stella and the Dycore with EB.
 You can deduce from the filenames that some are for the crCLIM or Cordex setup, and some target the CPU or GPU.
@@ -302,6 +305,8 @@ You have:
   * `EBROOTDYCORE_CRCLIM_GPU` : Dycore with crCLIM setup (KSIZE=60 and KFLAT=19) for GPU
   * `EBROOTDYCORE_CORDEX_CPU` : Dycore with crCLIM setup (KSIZE=40 and KFLAT=9)  for CPU
   * `EBROOTDYCORE_CORDEX_GPU` : Dycore with crCLIM setup (KSIZE=40 and KFLAT=9)  for GPU
+  * `EBROOTDYCORE_MASTER_CPU` : Dycore with crCLIM setup (KSIZE=60 and KFLAT=8)  for CPU
+  * `EBROOTDYCORE_MASTER_GPU` : Dycore with crCLIM setup (KSIZE=60 and KFLAT=8)  for GPU
 
 
 If you're unsure of the variable name, you can request details of the module with `module show`:
